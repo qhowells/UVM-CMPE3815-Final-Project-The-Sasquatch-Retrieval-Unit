@@ -1,0 +1,14 @@
+const int LIFT_UP_POS = 80;
+
+//Short lift function that will pick up object after grip has been achieved, to be called in collision detection function
+void LiftFunction() {
+  Serial.println("Lifting object");
+  myservo2.write(LIFT_UP_POS);
+  //Incrementally lifts object until threshold has been achieved
+  // for (int pos = LIFT_START_POS; pos <= LIFT_UP_POS; pos += 2) {
+  //   myservo2.write(pos);
+  //   delay(30);
+  // }
+  
+  Motor(Stop, 0, 0, 0, 0);
+}
