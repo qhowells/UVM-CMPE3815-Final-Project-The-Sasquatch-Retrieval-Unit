@@ -1,0 +1,58 @@
+
+#define FORCE_SENSOR A5
+
+const int GRIP_START_POS = 180;
+const int GRIP_MIN_POS = 90;
+const int FORCE_THRESHOLD = 400; //Analog sensor threshold for the force sensor
+
+//Servo incremental movement amount
+int movement_amount = 5;
+
+bool taskComplete = false; //Boolean constant to be referenced by later if statements 
+
+//Function that will run when grip proximity has been achieved
+//Claws will close on object by using the associated servo motor until force threshold has been reached
+bool GripFunction() {
+  int servoPos = GRIP_START_POS; //Initial servo position from setup code section
+  int force_reading = analogRead(FORCE_SENSOR); 
+
+  Serial.println("Starting grip"); //For troubleshooting
+
+  //Analog reading of force sensor increases as force increases so when it is less, sufficient grip has not been achieved
+  while (force_reading < FORCE_THRESHOLD) {
+    servoPos -= movement_amount; //Incremental count for motor movement
+    servoPos = constrain(servoPos, GRIP_MIN_POS, GRIP_START_POS); //Limits the movement of the servo to the min and max domain
+    
+    //Library moves the motor
+    myservo1.write(servoPos);
+    delay(80); 
+    //Take another reading to check if motion should continue
+    force_reading = analogRead(FORCE_SENSOR);
+
+    Serial.print("Force reading: ");
+    Serial.print(force_reading);
+    Serial.print(" | Grip servo position: ");
+    Serial.println(servoPos);
+    //If outside of range, stop moving
+    if (servoPos <= GRIP_MIN_POS) {
+      break;
+    }
+  }
+  //Stops function from running after the threshold has been exceeding, indicating that a sufficient hold has been achieved
+  if (force_reading >= FORCE_THRESHOLD) {
+    Serial.println("Grip successful");
+    return true;
+  } else {
+    Serial.println("Grip failed");
+    LiftFunction();
+    //Set movement amount to move object to other location
+    Motor(Move_Backward, 120, 120, 120, 120);
+    delay(1500);
+    Motor(Stop, 0, 0, 0, 0);
+    //Writes to start position, dropping object
+    myservo1.write(GRIP_START_POS);
+    myservo2.write(LIFT_START_POS);
+
+    return false;
+  }
+}
